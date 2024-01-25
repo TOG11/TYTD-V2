@@ -1,0 +1,77 @@
+@import url('https://fonts.googleapis.com/css2?family=Concert+One&family=Fira+Sans&display=swap');
+
+body,
+html {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background-color: black;
+    font-family: 'Concert One', sans-serif;
+    text-align: center;
+    color: white;
+}
+
+.fira, p {
+    font-family: 'Fira Sans', sans-serif;
+}
+
+.line {
+    width: 100%;
+    height: 6px;
+    background-color: white;
+    right: 2px;
+    position: absolute;
+}
+
+.input_text {
+    border-radius: 7px;
+    font-size: 30px;
+}
+
+.input_checkbox {
+    height: 30px;
+    width: 30px;
+}
+
+.input_submit {
+    transition: 140ms;
+    border-radius: 10px;
+    font-size: 50px;
+    cursor: pointer;
+}
+
+.input_submit:hover {
+    transition: 140ms;
+    border-radius: 7px;
+    font-size: 45px;
+    cursor: pointer;
+    border: 4px solid white;
+    color: white;
+    background-color: black;
+}
+
+.input_submit:active {
+    transition: 140ms;
+    border-radius: 12px;
+    font-size: 42px;
+    cursor: pointer;
+    border: 4px solid white;
+    color: white;
+    background-color: black;
+}
+
+.textarea {
+    width: 350px;
+    height: 250px;
+}
+
+.footer {
+    position: fixed;
+    left: 0;
+    bottom: 0;
+    width: 100%;
+    background-color: rgb(255, 255, 255);
+    color: rgb(0, 0, 0);
+    border-top: 6px solid rgb(0, 170, 255);
+    text-align: center;
+  }

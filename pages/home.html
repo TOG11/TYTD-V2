@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <!-- Created by Togi (Aiden C. Desjarlais) -->
+    <title>TYTD V2</title>
+    <link href="/static/global/css" rel="stylesheet">
+    <script src="/static/home/js"></script>
+</head>
+
+<body>
+    <br><br>
+    <h1 style="cursor: pointer; user-select: none;" onclick="window.location.href='/'">Togi's YouTube Downloader V2</h1>
+    <h3 class="fira">TYTD V2<br><br>V 2.2.2</h3>
+    <br>
+    <hr class="line">
+    <br><br>
+    <form style="font-size: 40px;" action="/api/v1/download" target="_self" method="post" id="form">
+        <label for="url">Youtube URL To Download</label><br>
+        <input class="input_text fira" name="url" type="text" placeholder="YouTube URL" oninput="CheckURL(this)">
+        <br><br>
+        <label for="audio_only">Audio Only?</label>
+        <input class="input_checkbox fira" name="audio_only" type="checkbox">
+        <br><br>
+        <input class="input_submit fira" type="button" value="Download" onclick="Submit()">
+    </form>
+    <div class="footer">
+        <p><b>Created by Aiden C. Desjarlais. Licensed under MIT.</b><br><br><a>GitHub</a> | <a href="https://aidendes.com">About Me</a></p>
+    </div>
+</body>
+
+</html>
