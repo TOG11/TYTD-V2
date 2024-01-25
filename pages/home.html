@@ -23,7 +23,7 @@
     <br><br>
     <form style="font-size: 40px;" action="/api/v1/download" target="_self" method="post" id="downloadform">
         <label for="url">Youtube URL To Download</label><br>
-        <input class="input_text fira" name="url" type="text" placeholder="YouTube URL" oninput="CheckURL(this)">
+        <input class="input_text fira" name="url" type="text" placeholder="YouTube URL" id="url" oninput="CheckURL(this)">
         <br><br>
         <label for="audio_only">Audio Only?</label>
         <input class="input_checkbox fira" name="audio_only" type="checkbox">
