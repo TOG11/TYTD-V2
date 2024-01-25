@@ -21,8 +21,12 @@ window.onload = () => {
         var receivedMessage = false;
 
         var update = setInterval(() => {
-            log("ALIVE: Server is still alive and working !!");
+            log("ALIVE: Server is most likley working, please wait (Still connected) !!");
         }, 15000);
+
+        var notice = setInterval(() => {
+            log("ALERT: Server has not responded in more than 1 minute, if your video is small and not above 1080p30 then try a re-download !!");
+        }, 60000);
 
         ws.onopen = function () {
             log("OK: Socket opened");
@@ -67,6 +71,7 @@ window.onload = () => {
                     break;
                 case "COMPLETED":
                     clearInterval(update);
+                    clearInterval(notice);
                     log("INFO: Video completed, download via the now available button below :)\nMade by Togi!!");
                     downloadURL = "http://" + location.host + "/api/v1/fetchdownload?vid=" + searchParams.get("vid");
                     document.getElementById("downloads").hidden = false;

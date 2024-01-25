@@ -1,4 +1,7 @@
 var allowSubmit = false;
+window.onload = () => {
+    CheckURL(document.getElementById("submit"))
+}
 
 function CheckURL(elem) {
     var check = elem.value;
