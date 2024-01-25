@@ -1,6 +1,6 @@
 var allowSubmit = false;
 window.onload = () => {
-    CheckURL(document.getElementById("downloadbtn"))
+    CheckURL(document.getElementById("downloadbtn").value);
 }
 
 function CheckURL(elem) {
