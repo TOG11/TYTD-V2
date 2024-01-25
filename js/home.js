@@ -1,6 +1,6 @@
 var allowSubmit = false;
 window.onload = () => {
-    CheckURL(document.getElementById("submit"))
+    CheckURL(document.getElementById("downloadbtn"))
 }
 
 function CheckURL(elem) {
@@ -14,7 +14,7 @@ function CheckURL(elem) {
 
 function Submit() {
     if (allowSubmit)
-        document.getElementById("form").submit();
+        document.getElementById("downloadform").submit();
     else
         alert("Invalid YouTube URL");
 }

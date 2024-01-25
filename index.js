@@ -38,6 +38,40 @@ app.get("/static/downloading/js", (req, res) => {
     res.sendFile(path.join(__dirname, "/js/downloading.js"));
 });
 
+//cleaners (every 24hrs)
+
+setInterval(() => {
+    fs.readdir("./data/tmp", (err, files) => {
+        if (err) throw err;
+      
+        for (const file of files) {
+          fs.unlink(path.join("./data/tmp/", file), (err) => {
+            if (err) throw err;
+          });
+        }
+      });
+
+      fs.readdir("./data/downloads", (err, files) => {
+        if (err) throw err;
+      
+        for (const file of files) {
+          fs.unlink(path.join("./data/downloads/", file), (err) => {
+            if (err) throw err;
+          });
+        }
+      });
+
+      fs.readdir("./data/active_uuids", (err, files) => {
+        if (err) throw err;
+      
+        for (const file of files) {
+          fs.unlink(path.join("./data/active_uuids/", file), (err) => {
+            if (err) throw err;
+          });
+        }
+      });
+}, 1000 * 60 * 60 * 24);
+
 
 // V1 API
 
