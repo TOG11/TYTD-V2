@@ -1,0 +1,30 @@
+{
+    "branch": "PROD",
+
+    "tytd": {
+        "version": "2.4.0"
+    },
+    "DEVELOPMENT": {
+        "data": {
+            "wipe_onstart": true,
+            "wipe_cycle": true,
+            "wipe_cycle_hours": "24"
+        },
+        "server": {
+            "port": 3000,
+            "logs": true
+        }
+    },
+    "PRODUCTION": {
+        "data": {
+            "wipe_onstart": false,
+            "wipe_cycle": true,
+            "wipe_cycle_hours": "24"
+        },
+        "server": {
+            "port": 3750,
+            "logs": false
+        }
+    },
+    "config_version": "1.0.0"
+}

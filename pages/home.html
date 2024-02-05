@@ -17,9 +17,8 @@
 <body>
     <br><br>
     <h1 style="cursor: pointer; user-select: none;" onclick="window.location.href='/'">Togi's YouTube Downloader V2</h1>
-    <h3 class="fira">TYTD V2<br><br>V 2.2.2</h3>
+    <h3 class="fira">TYTD V2<br><br>V <span id="tytdversion"></span></h3>
     <br>
-    <hr class="line">
     <br><br>
     <form style="font-size: 40px;" action="/api/v1/download" target="_self" method="post" id="downloadform">
         <label for="url">Youtube URL To Download</label><br>
@@ -31,12 +30,16 @@
         <input class="input_submit fira" type="button" value="Download" id="downloadbtn" onclick="Submit()">
     </form>
     <br><br><br>
-    <h2 class="fira"><span style="color: yellow;">NOTICE:</span><b> Videos will take awhile to download if they are high
+    <h3 class="fira"><span style="color: yellow;">NOTICE:</span><b> Videos will take awhile to download if they are high
             quality!<br>Currently the server is <span style="color: yellow;">low-end</span>, however if this site sees more usage i will upgrade it.<br>
             Wait times for videos with higher than <span style="color: yellow;">1080p30</span> quality will be longer!<br>
             <i>Video length does not matter as much</i>.</b>
-    </h2>
+    </h3>
     <h4 class="fira"><b><i>In the future there will be quality options per video. Right now default is highest.</i></b></h4>
+    <br><br>
+    <br><br>
+    <h3 class="fira">Daily Download Wipe Timer :</h3>
+    <h2 class="fira" id="wipetimer"></h2>
     <br><br>
     <br><br>
     <br><br>
