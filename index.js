@@ -1,7 +1,17 @@
 // Aiden C. Desjarlais 2024 (C)
 
 const youtube = require("ytdl-core");
+
 const fs = require("fs");
+if (!fs.existsSync("./data")) {
+    //init file system
+    fs.mkdir("./data", () => {
+        fs.mkdirSync("./data/active_uuids");
+        fs.mkdirSync("./data/downloads");
+        fs.mkdirSync("./data/tmp");
+    })
+}
+
 const app = require("express")();
 const path = require("path");
 const { randomUUID } = require("crypto");
