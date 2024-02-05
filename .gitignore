@@ -129,3 +129,4 @@ ffmpeg.exe
 ffplay.exe
 ffprobe.exe
 data/
+timer.json
