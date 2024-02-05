@@ -17,6 +17,7 @@ var serverPort = 1111;
 var useLogs = false;
 var wipeCycle = false;
 var wipeCycleHours = 48;
+var saveWipeCycle = false;
 var tytdVersion = "Unknown";
 var configVersion = "Unknown";
 tytdVersion = config.tytd.version;
@@ -28,6 +29,7 @@ if (config.branch === "DEV") {
     useLogs = config.DEVELOPMENT.server.logs;
     wipeCycle = config.DEVELOPMENT.data.wipe_cycle;
     wipeCycleHours = config.DEVELOPMENT.data.wipe_cycle_hours;
+    saveWipeCycle = config.DEVELOPMENT.data.save_wipe_cycle;
 
     if (config.DEVELOPMENT.data.wipe_onstart) {
         fs.rm("./data", { recursive: true }, () => {
@@ -40,6 +42,7 @@ if (config.branch === "DEV") {
     useLogs = config.PRODUCTION.server.logs;
     wipeCycle = config.PRODUCTION.data.wipe_cycle;
     wipeCycleHours = config.PRODUCTION.data.wipe_cycle_hours;
+    saveWipeCycle = config.PRODUCTION.data.save_wipe_cycle;
 
     if (config.PRODUCTION.data.wipe_onstart) {
         fs.rm("./data", { recursive: true }, () => {
@@ -55,8 +58,24 @@ const wipeTimeEnd = 60 * 60 * wipeCycleHours; // hours > seconds
 var wipeTime = 60 * 60 * wipeCycleHours; // this is our timer
 
 if (wipeCycle) {
+
+    //check for save
+    if (fs.existsSync("./timer.json") && saveWipeCycle) {
+        fs.readFile("./timer.json", { encoding: "utf8" }, (err, data) => {
+            if (err) print(err);
+            var json = JSON.parse(data);
+            console.log("[WipeCycle] Loaded saved wipe cycle time");
+            //override wipe time
+            wipeTime = json.timeLeft;
+        })
+    }
+
     setInterval(() => {
         wipeTime -= 1;
+
+        //save timer
+        if (saveWipeCycle)
+            fs.writeFileSync("./timer.json", JSON.stringify({ timeLeft: wipeTime }), { encoding: "utf8" });
 
         activeTimerSockets.forEach(socket => {
             socket.send(wipeTime);
@@ -120,6 +139,10 @@ app.get("/static/home/js", (req, res) => {
 
 app.get("/static/downloading/js", (req, res) => {
     res.sendFile(path.join(__dirname, "/js/downloading.js"));
+});
+
+app.get("/static/styles", (req, res) => {
+    res.sendFile(path.join(__dirname, "/js/styles.js"));
 });
 
 

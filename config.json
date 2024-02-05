@@ -1,14 +1,15 @@
 {
-    "branch": "DEV",
+    "branch": "PROD",
 
     "tytd": {
-        "version": "2.4.0"
+        "version": "2.4.5"
     },
     "DEVELOPMENT": {
         "data": {
             "wipe_onstart": true,
             "wipe_cycle": true,
-            "wipe_cycle_hours": "24"
+            "wipe_cycle_hours": "24",
+            "save_wipe_cycle": false
         },
         "server": {
             "port": 3000,
@@ -19,12 +20,13 @@
         "data": {
             "wipe_onstart": false,
             "wipe_cycle": true,
-            "wipe_cycle_hours": "24"
+            "wipe_cycle_hours": "24",
+            "save_wipe_cycle": true
         },
         "server": {
             "port": 3750,
             "logs": false
         }
     },
-    "config_version": "1.0.0"
+    "config_version": "1.0.2"
 }
