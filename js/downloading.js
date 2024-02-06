@@ -34,8 +34,8 @@ window.onload = () => {
         function log(msg) {
             logArea.innerHTML += msg + "\n";
         }
-
-        if (!searchParams.get("vid") && JSON.parse(res).code == 200) {
+        console.log(JSON.parse(res).code)
+        if (searchParams.get("pid") && JSON.parse(res).code == 200) {
             console.log(`%c[downloader] Found playlist on server`, DefaultCss);
             log(JSON.parse(res).details);
             document.getElementById("toptext").innerHTML = "Found Playlist!"
@@ -60,7 +60,9 @@ window.onload = () => {
             log("Available details below:\n\n");
             log("Download for: " + JSON.parse(res).data.url);
             log("Created on: " + new Date(JSON.parse(res).data.created).toLocaleString());
-            if (JSON.parse(res).data.audio_only)
+            if (JSON.parse(res).data.playlist)
+                log("This download was ZIP");
+            else if (JSON.parse(res).data.audio_only)
                 log("This download was MP3");
             else
                 log("This download was MP4");
@@ -101,7 +103,7 @@ window.onload = () => {
             var msg = evt.data;
             switch (msg) {
                 case "INVALID_VID":
-                    console.log(`%c[downloader] The video id provided does not exist on any of our records.`, DefaultCss);
+                    console.log(`%c[downloader] The uuid provided does not exist on any of our records.`, DefaultCss);
                     log("ERROR: Check debug log");
                     alert("There was a fatal error connecting with the live socket.\nServer received invalid video id");
                     clearInterval(update);

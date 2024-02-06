@@ -194,6 +194,11 @@ app.get("/api/v1/checkdownload", (req, res) => {
         var vidData = JSON.parse(fs.readFileSync("./data/inactive_uuids/" + req.query.uuid + ".vid"));
         res.json({ code: 204, details: "This download is no longer available on our servers.", data: vidData });
     }
+    else if (fs.existsSync("./data/inactive_uuids/" + req.query.uuid + ".pid")) {
+        console.log("[/api/v1/checkdownload]: 200 @PID " + req.query.uuid + " INACTIVE");
+        var vidData = JSON.parse(fs.readFileSync("./data/inactive_uuids/" + req.query.uuid + ".pid"));
+        res.json({ code: 204, details: "This download is no longer available on our servers.", data: vidData });
+    }
     else if (fs.existsSync("./data/playlists/" + req.query.uuid + ".zip")) {
         console.log("[/api/v1/checkdownload]: 200 @PID " + req.query.uuid + " ZIP");
         res.json({ code: 200, details: "Found playlist" });

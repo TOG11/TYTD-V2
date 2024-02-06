@@ -1,12 +1,12 @@
 {
-    "branch": "PROD",
+    "branch": "DEV",
 
     "tytd": {
         "version": "2.5.0"
     },
     "DEVELOPMENT": {
         "data": {
-            "wipe_onstart": true,
+            "wipe_onstart": false,
             "wipe_cycle": true,
             "wipe_cycle_hours": "0.05",
             "save_wipe_cycle": false
