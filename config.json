@@ -8,7 +8,7 @@
         "data": {
             "wipe_onstart": true,
             "wipe_cycle": true,
-            "wipe_cycle_hours": "24",
+            "wipe_cycle_hours": "0.05",
             "save_wipe_cycle": false
         },
         "server": {

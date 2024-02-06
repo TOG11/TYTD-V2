@@ -82,7 +82,7 @@ if (wipeCycle) {
             socket.send(wipeTime);
         })
 
-        if (wipeTimeEnd <= wipeTime) {
+        if (wipeTime <= 1) {
             wipeTime = 60 * 60 * wipeCycleHours;
             RemoveData();
         }
