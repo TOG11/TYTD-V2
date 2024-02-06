@@ -27,12 +27,22 @@ window.onload = () => {
     }
 
     var searchParams = new URLSearchParams(window.location.search);
-    if (!searchParams.has("vid")) window.location.href = "/";
+    if (!searchParams.has("vid") && !searchParams.get("pid")) window.location.href = "/";
 
-    httpGetAsync("http://" + location.host + "/api/v1/checkdownload?vid=" + searchParams.get("vid"), (res) => {
+    httpGetAsync("http://" + location.host + "/api/v1/checkdownload?uuid=" + (!searchParams.get("vid") ? searchParams.get("pid") : searchParams.get("vid")), (res) => {
         var logArea = document.getElementById("log");
         function log(msg) {
             logArea.innerHTML += msg + "\n";
+        }
+
+        if (!searchParams.get("vid") && JSON.parse(res).code == 200) {
+            console.log(`%c[downloader] Found playlist on server`, DefaultCss);
+            log(JSON.parse(res).details);
+            document.getElementById("toptext").innerHTML = "Found Playlist!"
+            log("Download for this playlist was found on the server.\nNo socket connection needed, download below.")
+            downloadURL = "http://" + location.host + "/api/v1/fetchdownload?pid=" + searchParams.get("pid");
+            document.getElementById("downloads").hidden = false;
+            return;
         }
 
         if (JSON.parse(res).code == 200) {
@@ -57,7 +67,7 @@ window.onload = () => {
             return;
         }
 
-        
+
 
         var ws = new WebSocket("ws://" + location.host + "/api/v1/datasocket");
         var receivedMessage = false;
@@ -73,12 +83,14 @@ window.onload = () => {
         ws.onopen = function () {
             console.log(`%c[downloader] Connected to the data socket`, DefaultCss);
             log("OK: Socket opened");
-            ws.send(searchParams.get("vid"));
+            ws.send(!searchParams.get("vid") ? searchParams.get("pid") : searchParams.get("vid"));
             setTimeout(() => {
                 if (!receivedMessage) {
                     console.log(`%c[downloader] Timed out after 2500ms, server did not respond in time.\nIs the server down?`, DefaultCss);
                     log("FATAL ERROR | CHECK DEBUG LOG");
                     alert("There was an error connecting with the live socket. Check debug log for more info.");
+                    clearInterval(update);
+                    clearInterval(notice);
                     ws.close();
                 }
             }, 2500);
@@ -132,6 +144,18 @@ window.onload = () => {
                     clearInterval(notice);
                     log("INFO: Video completed, download via the now available button below :)\nMade by Togi!!");
                     downloadURL = "http://" + location.host + "/api/v1/fetchdownload?vid=" + searchParams.get("vid");
+                    document.getElementById("downloads").hidden = false;
+                    break;
+                case "PLAYLIST_STARTED":
+                    console.log(`%c[downloader] Server is downloading the playlist.`, DefaultCss);
+                    log("INFO: Server has begun downloading the playlist\n\nThis will take ahwile.\n\nPlease note there are no logs for each download, the next log will be when it finishes.\n!! This will take a moment !!");
+                    break;
+                case "PLAYLIST_COMPLETED":
+                    console.log(`%c[downloader] Server completed the playlist.`, DefaultCss);
+                    log("INFO: Server has downloaded the playlist, you can now download the .zip from the button below!");
+                    clearInterval(update);
+                    clearInterval(notice);
+                    downloadURL = "http://" + location.host + "/api/v1/fetchdownload?pid=" + searchParams.get("pid");
                     document.getElementById("downloads").hidden = false;
                     break;
             }

@@ -2,6 +2,7 @@
 
 const config = require("./config.json");
 const youtube = require("ytdl-core");
+const archiver = require('archiver');
 
 const fs = require("fs");
 if (!fs.existsSync("./data")) {
@@ -121,7 +122,7 @@ app.get("/", (req, res) => {
 });
 
 app.get("/downloading", (req, res) => {
-    if (!req.query.vid) return res.sendStatus(401);
+    if (!req.query.vid && !req.query.pid) return res.sendStatus(401);
     res.sendFile(path.join(__dirname, "/pages/downloading.html"));
 });
 
@@ -154,7 +155,7 @@ app.get("/api/v1/config", (req, res) => {
 })
 
 app.get("/api/v1/fetchdownload", (req, res) => {
-    if (!req.query.vid) { console.log("[/api/v1/fetchdownload]: 401 @VID " + req.query.vid); res.sendStatus(401); return };
+    if (!req.query.vid && !req.query.pid) { console.log("[/api/v1/fetchdownload]: 401 @UUID " + req.query.vid != undefined ? req.query.vid : req.query.pid); res.sendStatus(401); return };
 
     if (fs.existsSync("./data/downloads/" + req.query.vid + ".mp3")) {
         console.log("[/api/v1/fetchdownload]: 200 @VID " + req.query.vid + " MP3");
@@ -167,6 +168,10 @@ app.get("/api/v1/fetchdownload", (req, res) => {
         //stopped streaming for performance increase! Sorry!
         res.download(path.join(__dirname, "/data/downloads/" + req.query.vid + ".mp4"));
     }
+    else if (fs.existsSync("./data/playlists/" + req.query.pid + ".zip")) {
+        console.log("[/api/v1/fetchdownload]: 200 @PID" + req.query.pid + " ZIP");
+        res.download(path.join(__dirname, "/data/playlists/" + req.query.pid + ".zip"));
+    }
     else {
         console.log("[/api/v1/fetchdownload]: 404 @VID " + req.query.vid);
         res.sendStatus(404);
@@ -174,23 +179,27 @@ app.get("/api/v1/fetchdownload", (req, res) => {
 });
 
 app.get("/api/v1/checkdownload", (req, res) => {
-    if (!req.query.vid) { console.log("[/api/v1/checkdownload]: 401 @VID " + req.query.vid); res.sendStatus(401); return };
+    if (!req.query.uuid) { console.log("[/api/v1/checkdownload]: 401 @VID " + req.query.uuid); res.sendStatus(401); return };
 
-    if (fs.existsSync("./data/downloads/" + req.query.vid + ".mp4")) {
-        console.log("[/api/v1/checkdownload]: 200 @VID " + req.query.vid + " MP4");
+    if (fs.existsSync("./data/downloads/" + req.query.uuid + ".mp4")) {
+        console.log("[/api/v1/checkdownload]: 200 @VID " + req.query.uuid + " MP4");
         res.json({ code: 200, details: "found video on server" });
     }
-    else if (fs.existsSync("./data/downloads/" + req.query.vid + ".mp3")) {
-        console.log("[/api/v1/checkdownload]: 200 @VID " + req.query.vid + " MP3");
+    else if (fs.existsSync("./data/downloads/" + req.query.uuid + ".mp3")) {
+        console.log("[/api/v1/checkdownload]: 200 @VID " + req.query.uuid + " MP3");
         res.json({ code: 200, details: "found audio on server" });
     }
-    else if (fs.existsSync("./data/inactive_uuids/" + req.query.vid + ".vid")) {
-        console.log("[/api/v1/checkdownload]: 200 @VID " + req.query.vid + " INACTIVE");
-        var vidData = JSON.parse(fs.readFileSync("./data/inactive_uuids/" + req.query.vid + ".vid"));
+    else if (fs.existsSync("./data/inactive_uuids/" + req.query.uuid + ".vid")) {
+        console.log("[/api/v1/checkdownload]: 200 @VID " + req.query.uuid + " INACTIVE");
+        var vidData = JSON.parse(fs.readFileSync("./data/inactive_uuids/" + req.query.uuid + ".vid"));
         res.json({ code: 204, details: "This download is no longer available on our servers.", data: vidData });
     }
+    else if (fs.existsSync("./data/playlists/" + req.query.uuid + ".zip")) {
+        console.log("[/api/v1/checkdownload]: 200 @PID " + req.query.uuid + " ZIP");
+        res.json({ code: 200, details: "Found playlist" });
+    }
     else {
-        console.log("[/api/v1/checkdownload]: 404 @VID " + req.query.vid);
+        console.log("[/api/v1/checkdownload]: 404 @VID " + req.query.uuid);
         res.json({ code: 404, details: "video was not found on the server" });
     }
 });
@@ -220,7 +229,7 @@ app.ws('/api/v1/datasocket', function (ws, req) {
 
 
     ws.on('message', (msg) => {
-        if (!fs.existsSync("./data/active_uuids/" + msg + ".vid") && !locatedID) { console.log("[/api/v1/datasocket@connect]: WS404 @VID " + msg); ws.send("INVALID_VID"); ws.terminate(); } //invalid vID
+        if (!fs.existsSync("./data/active_uuids/" + msg + ".vid") && !locatedID && !fs.existsSync("./data/active_uuids/" + msg + ".pid")) { console.log("[/api/v1/datasocket@connect]: WS404 @VID " + msg); ws.send("INVALID_VID"); ws.terminate(); } //invalid vID
 
         locatedID = true;
         dataObj = { socket: ws, vid: msg };
@@ -242,12 +251,156 @@ app.post("/api/v1/download", (req, res) => {
     const url = req.body.url;
     const audioOnly = req.body.audio_only
     var videoID = randomUUID();
-    console.log("[/api/v1/download]: GENERATED VID " + videoID + " AS " + (audioOnly ? "MP3" : "MP4"));
+    console.log("[/api/v1/download]: GENERATED UUID " + videoID);
     if (!/^((?:https?:)?\/\/)?((?:www|m)\.)?((?:youtube(-nocookie)?\.com|youtu.be))(\/(?:[\w\-]+\?v=|embed\/|live\/|v\/)?)([\w\-]+)(\S+)?$/.test(url)) {
         console.log("[/api/v1/download]: 400 @URL " + req.body.url);
         return res.sendStatus(400);
     }
 
+
+    //video/audio playlist download
+    if (/^(?!.*\?.*\bv=)https:\/\/www\.youtube\.com\/.*\?.*\blist=.*$/.test(url)) {
+        //is playlist
+        console.log("[/api/v1/download]: DOWNLOADING PLAYLIST @PID " + videoID);
+        var playlistID = videoID;
+        fs.writeFile("./data/active_uuids/" + playlistID + ".pid", JSON.stringify({ created: new Date(Date.now()).toISOString(), url: url, audio_only: audioOnly, playlist: true }), () => res.redirect("/downloading?pid=" + playlistID));
+        setTimeout(async () => {
+            const ytpl = require('ytpl');
+            var videos = (await ytpl(url, 'url')).items;
+            var completed = 0;
+            var completedList = [];
+            var completedNames = [];
+            var data = activeDataSockets.find(dataObj => dataObj.vid == videoID);
+
+            if (data === undefined)
+                data = { socket: { send: () => { /* no logs womp womp */ }, terminate: () => { /* no termination womp womp */ } }, vid: videoID };
+            data.socket.send("PLAYLIST_STARTED");
+
+            var awaiterval = setInterval(() => {
+                if (completed === videos.length) {
+                    clearInterval(awaiterval);
+                    Completed();
+                }
+            }, 1000);
+
+            function Completed() {
+                //zip to playlist
+                var output = fs.createWriteStream(`./data/playlists/${playlistID}.zip`);
+                var archive = archiver('zip', {
+                    gzip: true,
+                    zlib: { level: 9 } // Sets the compression level.
+                });
+
+                archive.on('error', function (err) {
+                    print(err);
+                });
+
+                archive.pipe(output);
+
+
+                completedList.forEach((file, idx) => {
+                    if (!audioOnly)
+                        archive.file(file, { name: `TYTD | ${completedNames[idx]}.mp4` });
+                    else
+                        archive.file(file, { name: `TYTD | ${completedNames[idx]}.mp3` });
+                })
+
+                archive.finalize().then(() => {
+                    data.socket.send("PLAYLIST_COMPLETED");
+                    completedList.forEach(file => {
+                        fs.unlink(file, (err) => { if (err) print(err) });
+                    })
+                })
+            }
+
+
+            //TO-DO
+            //add front end logs
+            videos.forEach((videoData) => { //download all of em
+                var audio = undefined;
+                var video = undefined;
+                var videoID = randomUUID();
+
+                //download video
+                if (!audioOnly) {
+                    video = youtube(videoData.url, { filter: 'videoonly' }).pipe(fs.createWriteStream(path.join(__dirname, "/data/tmp/" + videoID + ".mp4")));
+                    audio = youtube(videoData.url, { filter: 'audioonly' }).pipe(fs.createWriteStream(path.join(__dirname, "/data/tmp/" + videoID + ".m4a")));
+                } else {
+                    audio = youtube(videoData.url, { filter: 'audioonly' }).pipe(fs.createWriteStream(path.join(__dirname, "/data/tmp/" + videoID + ".m4a")));
+                }
+
+                var awaitingVideo = true;
+                var awaitingAudio = true;
+
+                if (!audioOnly)
+                    video.on("close", () => {
+                        console.log("[/api/v1/download]: VIDEO COMPLETED FOR VID " + videoID);
+                        awaitingVideo = false;
+
+                        //wait for audio to complete (if not already)
+                        if (!awaitingAudio) {
+                            console.log("[/api/v1/download]: MERGE " + videoID);
+                            Merge(`${__dirname}/data/tmp/${videoID}.mp4`, `${__dirname}/data/tmp/${videoID}.m4a`, `${__dirname}/data/downloads/${videoID}.mp4`, (err) => {
+                                if (err) throw err;
+
+                                if (!audioOnly)
+                                    fs.rm(`${__dirname}/data/tmp/${videoID}.mp4`, (err) => { if (err) print(err) })
+                                fs.rm(`${__dirname}/data/tmp/${videoID}.m4a`, (err) => { if (err) print(err) })
+                                completedList.push(`${__dirname}/data/downloads/${videoID}.mp4`);
+                                console.log("[/api/v1/download]: DOWNLOAD PROCESS FOR VID " + videoID + " COMPLETED");
+                                completed++;
+                                completedNames.push(videoData.title);
+                            });
+                        }
+                    })
+
+                audio.on("close", () => {
+                    console.log("[/api/v1/download]: AUDIO COMPLETED FOR VID " + videoID);
+                    awaitingAudio = false;
+
+                    //wait for video to complete (if not already)
+                    if (!awaitingVideo || audioOnly) {
+                        if (audioOnly) {
+                            console.log("[/api/v1/download]: CONVERTING > MP3 " + videoID);
+                            ffmpeg(`${__dirname}/data/tmp/${videoID}.m4a`)
+                                .audioBitrate(320)
+                                .toFormat('mp3')
+                                .addOptions(["-preset ultrafast"])
+                                .on('error', (err) => {
+                                    console.log("[/api/v1/download]: DOWNLOAD PROCESS FOR VID " + videoID + " ERRORED FFMPEG");
+                                    fs.rm(`${__dirname}/data/tmp/${videoID}.m4a`, (err) => { if (err) print(err) });
+                                })
+                                .on('end', () => {
+                                    completedList.push(`${__dirname}/data/downloads/${videoID}.mp3`);
+                                    console.log("[/api/v1/download]: DOWNLOAD PROCESS FOR VID " + videoID + " COMPLETED");
+                                    fs.rm(`${__dirname}/data/tmp/${videoID}.m4a`, (err) => { if (err) print(err) });
+                                    completed++;
+                                    completedNames.push(videoData.title);
+                                })
+                                .saveToFile(`${__dirname}/data/downloads/${videoID}.mp3`);
+                        } else {
+                            console.log("[/api/v1/download]: MERGE " + videoID);
+                            Merge(`${__dirname}/data/tmp/${videoID}.mp4`, `${__dirname}/data/tmp/${videoID}.m4a`, `${__dirname}/data/downloads/${videoID}.mp4`, (err) => {
+                                if (err) throw err;
+
+                                if (!audioOnly)
+                                    fs.rm(`${__dirname}/data/tmp/${videoID}.mp4`, (err) => { if (err) print(err) })
+                                fs.rm(`${__dirname}/data/tmp/${videoID}.m4a`, (err) => { if (err) print(err) })
+                                completedList.push(`${__dirname}/data/downloads/${videoID}.mp4`);
+                                console.log("[/api/v1/download]: DOWNLOAD PROCESS FOR VID " + videoID + " COMPLETED");
+                                completed++;
+                                completedNames.push(videoData.title);
+                            });
+                        }
+                    }
+                })
+            })
+        }, 1500);
+        return;
+    }
+
+
+    //video/audio singular download
     fs.writeFile("./data/active_uuids/" + videoID + ".vid", JSON.stringify({ created: new Date(Date.now()).toISOString(), url: url, audio_only: audioOnly }), () => res.redirect("/downloading?vid=" + videoID));
     console.log("[/api/v1/download]: GENERATED VID FILE ", "./data/active_uuids/" + videoID + ".vid");
 
@@ -371,11 +524,14 @@ function Merge(video, audio, output, callback) {
 
 function CreateFileSystem() {
     console.log("[CreateFileSystem()]: Created File System");
-    fs.mkdir("./data", () => {
-        fs.mkdirSync("./data/active_uuids");
-        fs.mkdirSync("./data/downloads");
-        fs.mkdirSync("./data/tmp");
-        fs.mkdirSync("./data/inactive_uuids");
+    fs.rm("./data", () => {
+        fs.mkdir("./data", () => {
+            fs.mkdirSync("./data/active_uuids");
+            fs.mkdirSync("./data/downloads");
+            fs.mkdirSync("./data/tmp");
+            fs.mkdirSync("./data/inactive_uuids");
+            fs.mkdirSync("./data/playlists");
+        })
     })
 }
 
@@ -388,7 +544,7 @@ function RemoveData() {
         //move to incactive vid folder
         for (const file of files) {
             fs.copyFile(path.join("./data/active_uuids/", file), path.join("./data/inactive_uuids/", file), () => {
-                fs.unlinkSync(path.join("./data/active_uuids/", file));
+                fs.rmSync(path.join("./data/active_uuids/", file));
             });
         }
     });
@@ -397,7 +553,17 @@ function RemoveData() {
         if (err) print(err);
 
         for (const file of files) {
-            fs.unlink(path.join("./data/downloads/", file), (err) => {
+            fs.rm(path.join("./data/downloads/", file), (err) => {
+                if (err) print(err);
+            });
+        }
+    });
+
+    fs.readdir("./data/playlists", (err, files) => {
+        if (err) print(err);
+
+        for (const file of files) {
+            fs.rm(path.join("./data/playlists/", file), (err) => {
                 if (err) print(err);
             });
         }
@@ -407,7 +573,7 @@ function RemoveData() {
         if (err) print(err);
 
         for (const file of files) {
-            fs.unlink(path.join("./data/tmp/", file), (err) => {
+            fs.rm(path.join("./data/tmp/", file), (err) => {
                 if (err) print(err);
             });
         }

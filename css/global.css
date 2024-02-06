@@ -36,7 +36,7 @@ html {
 .input_submit {
     transition: 140ms;
     border-radius: 10px;
-    font-size: 50px;
+    font-size: 40px;
     cursor: pointer;
 }
 
