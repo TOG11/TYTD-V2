@@ -181,7 +181,7 @@ app.get("/api/v1/fetchdownload", (req, res) => {
     }
     else if (fs.existsSync("./data/playlists/" + req.query.pid + ".zip")) {
         console.log("[/api/v1/fetchdownload]: 200 @PID" + req.query.pid + " ZIP");
-        res.download(path.join(__dirname, "/data/playlists/" + req.query.pid + ".zip"));
+        res.download(path.join(__dirname, "/data/playlists/" + req.query.pid + ".zip"), `${videoName}.zip`);
     }
     else {
         console.log("[/api/v1/fetchdownload]: 404 @VID " + req.query.vid);
@@ -303,12 +303,14 @@ app.post("/api/v1/download", async (req, res) => {
 
     //video/audio playlist download
     if (/^(?!.*\?.*\bv=)https:\/\/www\.youtube\.com\/.*\?.*\blist=.*$/.test(url)) {
+        const ytpl = require('ytpl');
+
         //is playlist
         console.log("[/api/v1/download]: DOWNLOADING PLAYLIST @PID " + videoID);
         var playlistID = videoID;
-        fs.writeFile("./data/active_uuids/" + playlistID + ".pid", JSON.stringify({ created: new Date(Date.now()).toISOString(), url: url, audio_only: audioOnly, playlist: true }), () => res.redirect("/downloading?pid=" + playlistID));
+        var videoName = (await ytpl(url, 'url')).title;
+        fs.writeFile("./data/active_uuids/" + playlistID + ".pid", JSON.stringify({ created: new Date(Date.now()).toISOString(), url: url, audio_only: audioOnly, playlist: true, name: videoName }), () => res.redirect("/downloading?pid=" + playlistID));
         setTimeout(async () => {
-            const ytpl = require('ytpl');
             var videos = (await ytpl(url, 'url')).items;
             var completed = 0;
             var completedList = [];
