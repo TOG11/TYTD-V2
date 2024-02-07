@@ -160,17 +160,20 @@ app.get("/api/v1/fetchdownload", (req, res) => {
     var videoName = "[Video Name Not Known]";
     if (fs.existsSync("./data/active_uuids/" + req.query.vid + ".vid")) {
         var json = JSON.parse(fs.readFileSync(path.join(__dirname, "/data/active_uuids/" + req.query.vid + ".vid"), { encoding: "utf8" }));
-        videoName = json.name;
+        if (json.name != undefined)
+            videoName = json.name;
     }
     else if (fs.existsSync("./data/active_uuids/" + req.query.pid + ".pid")) {
         var json = JSON.parse(fs.readFileSync(path.join(__dirname, "/data/active_uuids/" + req.query.pid + ".pid"), { encoding: "utf8" }));
         videoName = json.name;
+        if (json.name != undefined)
+            videoName = json.name;
     }
 
 
     if (fs.existsSync("./data/downloads/" + req.query.vid + ".mp3")) {
         console.log("[/api/v1/fetchdownload]: 200 @VID " + req.query.vid + " MP3");
-        res.download(path.join(__dirname, "/data/downloads/" + req.query.vid + ".mp3"),` ${videoName}.mp3`);
+        res.download(path.join(__dirname, "/data/downloads/" + req.query.vid + ".mp3"), ` ${videoName}.mp3`);
     }
     else if (fs.existsSync("./data/downloads/" + req.query.vid + ".mp4")) {
         console.log("[/api/v1/fetchdownload]: 200 @VID " + req.query.vid + " MP4");
