@@ -157,16 +157,24 @@ app.get("/api/v1/config", (req, res) => {
 app.get("/api/v1/fetchdownload", (req, res) => {
     if (!req.query.vid && !req.query.pid) { console.log("[/api/v1/fetchdownload]: 401 @UUID " + req.query.vid != undefined ? req.query.vid : req.query.pid); res.sendStatus(401); return };
 
+    var videoName = "[Video Name Not Known]";
+    if (fs.existsSync("./data/active_uuids/" + req.query.vid + ".vid")) {
+        var json = JSON.parse(fs.readFileSync(path.join(__dirname, "/data/active_uuids/" + req.query.vid + ".vid"), { encoding: "utf8" }));
+        videoName = json.name;
+    }
+    else if (fs.existsSync("./data/active_uuids/" + req.query.pid + ".pid")) {
+        var json = JSON.parse(fs.readFileSync(path.join(__dirname, "/data/active_uuids/" + req.query.pid + ".pid"), { encoding: "utf8" }));
+        videoName = json.name;
+    }
+
+
     if (fs.existsSync("./data/downloads/" + req.query.vid + ".mp3")) {
         console.log("[/api/v1/fetchdownload]: 200 @VID " + req.query.vid + " MP3");
-        //res.sendFile(path.join(__dirname, "/data/downloads/" + req.query.vid + ".mp3"));
-        res.download(path.join(__dirname, "/data/downloads/" + req.query.vid + ".mp3"));
+        res.download(path.join(__dirname, "/data/downloads/" + req.query.vid + ".mp3"),` ${videoName}.mp3`);
     }
     else if (fs.existsSync("./data/downloads/" + req.query.vid + ".mp4")) {
         console.log("[/api/v1/fetchdownload]: 200 @VID " + req.query.vid + " MP4");
-        //res.sendFile(path.join(__dirname, "/data/downloads/" + req.query.vid + ".mp4"));
-        //stopped streaming for performance increase! Sorry!
-        res.download(path.join(__dirname, "/data/downloads/" + req.query.vid + ".mp4"));
+        res.download(path.join(__dirname, "/data/downloads/" + req.query.vid + ".mp4"), `${videoName}.mp4`);
     }
     else if (fs.existsSync("./data/playlists/" + req.query.pid + ".zip")) {
         console.log("[/api/v1/fetchdownload]: 200 @PID" + req.query.pid + " ZIP");
@@ -174,6 +182,33 @@ app.get("/api/v1/fetchdownload", (req, res) => {
     }
     else {
         console.log("[/api/v1/fetchdownload]: 404 @VID " + req.query.vid);
+        res.sendStatus(404);
+    }
+});
+
+
+//endpoint not used yet, but will be soon.
+app.get("/api/v1/fetchdetails", (req, res) => {
+    if (!req.query.uuid) { console.log("[/api/v1/fetchdetails]: 401 @UUID " + req.query.uuid); res.sendStatus(401); return };
+
+    if (fs.existsSync("./data/active_uuids/" + req.query.uuid + ".vid")) {
+        console.log("[/api/v1/fetchdetails]: 200 @VID " + req.query.uuid);
+        res.json(JSON.parse(fs.readFileSync(path.join(__dirname, "/data/active_uuids/" + req.query.uuid + ".vid"), { encoding: "utf8" })));
+    }
+    else if (fs.existsSync("./data/inactive_uuids/" + req.query.uuid + ".vid")) {
+        console.log("[/api/v1/fetchdetails]: 200 @VID " + req.query.uuid);
+        res.json(JSON.parse(fs.readFileSync(path.join(__dirname, "/data/inactive_uuids/" + req.query.uuid + ".vid"), { encoding: "utf8" })));
+    }
+    else if (fs.existsSync("./data/active_uuids/" + req.query.uuid + ".pid")) {
+        console.log("[/api/v1/fetchdetails]: 200 @PID" + req.query.uuid);
+        res.json(JSON.parse(fs.readFileSync(path.join(__dirname, "/data/active_uuids/" + req.query.uuid + ".pid"), { encoding: "utf8" })));
+    }
+    else if (fs.existsSync("./data/inactive_uuids/" + req.query.uuid + ".pid")) {
+        console.log("[/api/v1/fetchdetails]: 200 @PID" + req.query.uuid);
+        res.json(JSON.parse(fs.readFileSync(path.join(__dirname, "/data/inactive_uuids/" + req.query.uuid + ".pid"), { encoding: "utf8" })));
+    }
+    else {
+        console.log("[/api/v1/fetchdetails]: 404 @UUID " + req.query.uuid);
         res.sendStatus(404);
     }
 });
@@ -204,7 +239,7 @@ app.get("/api/v1/checkdownload", (req, res) => {
         res.json({ code: 200, details: "Found playlist" });
     }
     else {
-        console.log("[/api/v1/checkdownload]: 404 @VID " + req.query.uuid);
+        console.log("[/api/v1/checkdownload]: 404 @UUID " + req.query.uuid);
         res.json({ code: 404, details: "video was not found on the server" });
     }
 });
@@ -251,7 +286,7 @@ app.ws('/api/v1/datasocket', function (ws, req) {
     });
 });
 
-app.post("/api/v1/download", (req, res) => {
+app.post("/api/v1/download", async (req, res) => {
     if (req.body.url === undefined) { console.log("[/api/v1/download]: 401 @URL " + req.body.url); res.sendStatus(401); return };
     const url = req.body.url;
     const audioOnly = req.body.audio_only
@@ -406,7 +441,12 @@ app.post("/api/v1/download", (req, res) => {
 
 
     //video/audio singular download
-    fs.writeFile("./data/active_uuids/" + videoID + ".vid", JSON.stringify({ created: new Date(Date.now()).toISOString(), url: url, audio_only: audioOnly }), () => res.redirect("/downloading?vid=" + videoID));
+
+    var { Client } = require("youtubei");
+    var youtubei = new Client();
+    var videoName = await youtubei.getVideo(youtube.getVideoID(url));
+
+    fs.writeFile("./data/active_uuids/" + videoID + ".vid", JSON.stringify({ created: new Date(Date.now()).toISOString(), url: url, audio_only: audioOnly, name: videoName.title }), () => res.redirect("/downloading?vid=" + videoID));
     console.log("[/api/v1/download]: GENERATED VID FILE ", "./data/active_uuids/" + videoID + ".vid");
 
     var audio = undefined;
