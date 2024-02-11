@@ -14,12 +14,9 @@ var expressWs = require('express-ws')(app);
 
 // https to hard for junior full-stack web dev
 // but i left it so you can enable if u want too
-const https = require("https");
 
-const serverOptions = {
-    key: fs.readFileSync(path.join(__dirname, "./certs/your-key.pem")),
-    cert: fs.readFileSync(path.join(__dirname, "./certs/your-cert.pem")),
-};
+const https = require("https");
+var serverOptions = {};
 
 
 if (!fs.existsSync("./data")) {
@@ -73,9 +70,15 @@ if (config.branch === "DEV") {
 } else
     throw new Error("Selected server config branch \"" + config.branch + "\" doesnt exist");
 
+if (useHTTPS)
+    serverOptions = {
+        key: fs.readFileSync(path.join(__dirname, "/certs/key.pem")),
+        cert: fs.readFileSync(path.join(__dirname, "/certs/cert.pem")),
+    };
+
+
 //wipe cycle V2
 
-const wipeTimeEnd = 60 * 60 * wipeCycleHours; // hours > seconds
 var wipeTime = 60 * 60 * wipeCycleHours; // this is our timer
 
 if (wipeCycle) {
