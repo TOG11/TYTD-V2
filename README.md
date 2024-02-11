@@ -1,12 +1,12 @@
 # TYTD V2
  Repo for TYTD V2
-# http://tytd.aidendes.com
+# http://togi.download
 ### Please make sure your on the LTS of Node.js or greater!<br>
 ### Please make sure you have FFMPEG (.exe) installed in the local directory of index.js!<br>
 ### run ```npm install``` to install dependenices.
 
 # Config Documentation
-For config version 1.0.2
+For config version 1.0.3
 ```
 {
     "branch": "PROD", // What branch should the server run? For developing, use DEV, for production, use PROD
@@ -23,7 +23,8 @@ For config version 1.0.2
         },
         "server": { // backend server config
             "port": 3000, // port for the server to run on
-            "logs": true // use developer logs
+            "logs": true, // use developer logs
+            "useHTTPS": false //enable HTTPS
         }
     },
 
@@ -39,9 +40,10 @@ For config version 1.0.2
         },
         "server": {
             "port": 3750,
-            "logs": false
+            "logs": false,
+            "useHTTPS": false //enable HTTPS
         }
     },
-    "config_version": "1.0.2" // config file version
+    "config_version": "1.0.3" // config file version
 }
 ```
