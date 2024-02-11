@@ -11,15 +11,14 @@ var ffmpeg = require('fluent-ffmpeg');
 app.use(require("express").json());
 app.use(require("express").urlencoded({ extended: true }))
 var expressWs = require('express-ws')(app);
-const https = require("https");
-const morgan = require("morgan");
-app.use(morgan("dev"));
-const dotenv = require("dotenv").config();
 
+// https to hard for junior full-stack web dev
+// but i left it so you can enable if u want too
+const https = require("https");
 
 const serverOptions = {
-    key: fs.readFileSync(path.join(__dirname, "./certs/tytd-key.pem")),
-    cert: fs.readFileSync(path.join(__dirname, "./certs/tytd.pem")),
+    key: fs.readFileSync(path.join(__dirname, "./certs/your-key.pem")),
+    cert: fs.readFileSync(path.join(__dirname, "./certs/your-cert.pem")),
 };
 
 

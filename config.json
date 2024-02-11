@@ -14,7 +14,7 @@
         "server": {
             "port": 3000,
             "logs": true,
-            "useHTTPS": false
+            "useHTTPS": true
         }
     },
     "PRODUCTION": {
@@ -27,8 +27,8 @@
         "server": {
             "port": 3750,
             "logs": false,
-            "useHTTPS": true
+            "useHTTPS": false
         }
     },
-    "config_version": "1.0.2"
+    "config_version": "1.0.3"
 }
