@@ -1,5 +1,5 @@
 {
-    "branch": "DEV",
+    "branch": "PROD",
 
     "tytd": {
         "version": "2.5.1"
@@ -13,7 +13,8 @@
         },
         "server": {
             "port": 3000,
-            "logs": true
+            "logs": true,
+            "useHTTPS": false
         }
     },
     "PRODUCTION": {
@@ -25,7 +26,8 @@
         },
         "server": {
             "port": 3750,
-            "logs": false
+            "logs": false,
+            "useHTTPS": true
         }
     },
     "config_version": "1.0.2"

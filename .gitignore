@@ -130,3 +130,4 @@ ffplay.exe
 ffprobe.exe
 data/
 timer.json
+certs/

@@ -1,10 +1,28 @@
 // Aiden C. Desjarlais 2024 (C)
 
+const fs = require("fs");
 const config = require("./config.json");
 const youtube = require("ytdl-core");
 const archiver = require('archiver');
+const app = require("express")();
+const path = require("path");
+const { randomUUID } = require("crypto");
+var ffmpeg = require('fluent-ffmpeg');
+app.use(require("express").json());
+app.use(require("express").urlencoded({ extended: true }))
+var expressWs = require('express-ws')(app);
+const https = require("https");
+const morgan = require("morgan");
+app.use(morgan("dev"));
+const dotenv = require("dotenv").config();
 
-const fs = require("fs");
+
+const serverOptions = {
+    key: fs.readFileSync(path.join(__dirname, "./certs/tytd-key.pem")),
+    cert: fs.readFileSync(path.join(__dirname, "./certs/tytd.pem")),
+};
+
+
 if (!fs.existsSync("./data")) {
     //init file system
     CreateFileSystem();
@@ -19,6 +37,7 @@ var useLogs = false;
 var wipeCycle = false;
 var wipeCycleHours = 48;
 var saveWipeCycle = false;
+var useHTTPS = false;
 var tytdVersion = "Unknown";
 var configVersion = "Unknown";
 tytdVersion = config.tytd.version;
@@ -31,6 +50,7 @@ if (config.branch === "DEV") {
     wipeCycle = config.DEVELOPMENT.data.wipe_cycle;
     wipeCycleHours = config.DEVELOPMENT.data.wipe_cycle_hours;
     saveWipeCycle = config.DEVELOPMENT.data.save_wipe_cycle;
+    useHTTPS = config.DEVELOPMENT.server.useHTTPS;
 
     if (config.DEVELOPMENT.data.wipe_onstart) {
         fs.rm("./data", { recursive: true }, () => {
@@ -44,6 +64,7 @@ if (config.branch === "DEV") {
     wipeCycle = config.PRODUCTION.data.wipe_cycle;
     wipeCycleHours = config.PRODUCTION.data.wipe_cycle_hours;
     saveWipeCycle = config.PRODUCTION.data.save_wipe_cycle;
+    useHTTPS = config.PRODUCTION.server.useHTTPS;
 
     if (config.PRODUCTION.data.wipe_onstart) {
         fs.rm("./data", { recursive: true }, () => {
@@ -104,14 +125,6 @@ console.log = (msg, params) => {
 }
 
 console.log("Logs Enabled");
-
-const app = require("express")();
-const path = require("path");
-const { randomUUID } = require("crypto");
-var ffmpeg = require('fluent-ffmpeg');
-app.use(require("express").json());
-app.use(require("express").urlencoded({ extended: true }))
-var expressWs = require('express-ws')(app);
 
 
 //pages
@@ -554,10 +567,17 @@ app.post("/api/v1/download", async (req, res) => {
 });
 
 
+if (useHTTPS) {
+    const server = https.createServer(serverOptions, app);
+    server.listen(serverPort, () => {
+        print("[HTTPS] Server Online");
+    });
+} else {
+    app.listen(serverPort, () => {
+        print("[HTTP] Server Online");
+    })
+}
 
-app.listen(serverPort, () => {
-    print("Server Online");
-})
 
 //utilitys
 
@@ -576,6 +596,8 @@ function CreateFileSystem() {
     console.log("[CreateFileSystem()]: Created File System");
     fs.rm("./data", () => {
         fs.mkdir("./data", () => {
+            if (useHTTPS)
+                fs.mkdirSync("./certs/");
             fs.mkdirSync("./data/active_uuids");
             fs.mkdirSync("./data/downloads");
             fs.mkdirSync("./data/tmp");
